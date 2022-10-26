@@ -112,15 +112,6 @@ public class GenericBiometricsController extends BaseController {
 	private ImageView biometricImage;
 
 	@FXML
-	private Label qualityScore;
-
-	@FXML
-	private Label attemptSlap;
-
-	@FXML
-	private Label thresholdScoreLabel;
-
-	@FXML
 	private Label thresholdLabel;
 
 	@FXML
@@ -218,6 +209,9 @@ public class GenericBiometricsController extends BaseController {
 	@FXML
 	private GridPane parentProgressPane;
 
+	@FXML
+	private Label biometricType;
+
 	@Autowired
 	private DocumentScanController documentScanController;
 
@@ -300,6 +294,7 @@ public class GenericBiometricsController extends BaseController {
 		thresholdBox.setVisible(!isExceptionPhoto(modality));
 		biometricBox.setVisible(true);
 		checkBoxPane.getChildren().clear();
+		biometricType.setText(applicationLabelBundle.getString(modality.name()));
 
 		// get List of captured Biometrics based on nonExceptionBio Attributes
 		List<BiometricsDto> capturedBiometrics = null;
@@ -819,6 +814,9 @@ public class GenericBiometricsController extends BaseController {
 
 		// Get the stream image from Bio ServiceImpl and load it in the image pane
 		biometricImage.setImage(getBioStreamImage(fieldId, modality, retry));
+		if(modality.equals(Modality.FACE) && getRegistrationDTOFromSession().getSelectedFaceAttempt() != null) {
+			biometricImage.setImage(getBioStreamImage(fieldId, modality, getRegistrationDTOFromSession().getSelectedFaceAttempt()));
+		}
 	}
 
 
@@ -845,7 +843,6 @@ public class GenericBiometricsController extends BaseController {
 			LOGGER.error("Error while getting image");
 		}
 
-		thresholdScoreLabel.setText(getQualityScoreText(biometricThreshold));
 		createQualityBox(retryCount, biometricThreshold);
 
 		clearBioLabels();
@@ -863,8 +860,6 @@ public class GenericBiometricsController extends BaseController {
 		clearCaptureData();
 		biometricPane.getStyleClass().clear();
 		biometricPane.getStyleClass().add(RegistrationConstants.BIOMETRIC_PANES_SELECTED);
-		qualityScore.setText(RegistrationConstants.HYPHEN);
-		attemptSlap.setText(RegistrationConstants.HYPHEN);
 		// duplicateCheckLbl.setText(RegistrationConstants.EMPTY);
 
 		retryBox.setVisible(!isExceptionPhoto(currentModality));
@@ -889,8 +884,6 @@ public class GenericBiometricsController extends BaseController {
 
 		biometricPane.getStyleClass().clear();
 		biometricPane.getStyleClass().add(RegistrationConstants.FINGERPRINT_PANES_SELECTED);
-		qualityScore.setText(getQualityScoreText(qltyScore));
-		attemptSlap.setText(String.valueOf(retry));
 
 		bioProgress.setProgress(
 				Double.valueOf(getQualityScoreText(qltyScore).split(RegistrationConstants.PERCENTAGE)[0]) / 100);
@@ -953,8 +946,15 @@ public class GenericBiometricsController extends BaseController {
 					//if (qualityScoreVal != 0) {
 						updateByAttempt(qualityScoreVal, getBioStreamImage(fxControl.getUiSchemaDTO().getId(), currentModality, attempt),
 								bioService.getMDMQualityThreshold(currentModality), biometricImage,
-								qualityText, bioProgress, qualityScore);
+								qualityText, bioProgress);
 					//}
+
+					if(isFace(currentModality)) {
+						String key = String.format("%s_%s", currentModality.name().toLowerCase(Locale.ROOT), attempt);
+						getRegistrationDTOFromSession().setSelectedFaceAttempt(attempt);
+						getRegistrationDTOFromSession().addBiometric(fxControl.getUiSchemaDTO().getId(), currentModality.name().toLowerCase(Locale.ROOT), getRegistrationDTOFromSession().getFaceBiometrics().get(key));
+						fxControl.refreshModalityButton(currentModality);
+					}
 
 					LOGGER.info("Mouse Event by attempt Ended. modality : {}", currentModality);
 
@@ -1460,9 +1460,6 @@ public class GenericBiometricsController extends BaseController {
 
 		this.fxControl = (BiometricFxControl) fxControl;
 		this.scanBtn.setId(this.fxControl.getUiSchemaDTO().getId()+"ScanBtn");
-		this.attemptSlap.setId(this.fxControl.getUiSchemaDTO().getId()+"AttemptSlap");
-		this.thresholdScoreLabel.setId(this.fxControl.getUiSchemaDTO().getId()+"ThresholdScoreLabel");
-		this.qualityScore.setId(this.fxControl.getUiSchemaDTO().getId()+"QualityScore");
 		this.currentModality = modality;
 		this.configBioAttributes = configBioAttributes;
 		this.nonConfigBioAttributes = nonConfigBioAttributes;
