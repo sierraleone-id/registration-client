@@ -58,12 +58,14 @@ public class RegistrationDTO {
 	private boolean isUpdateUINNonBiometric;
 	private boolean isNameNotUpdated;
 	private List<String> defaultUpdatableFieldGroups;
+	private Integer selectedFaceAttempt;
 
 	private Map<String, Object> demographics = new HashMap<>();
 	private Map<String, Object> defaultDemographics = new LinkedHashMap<>();
 	private Map<String, DocumentDto> documents = new HashMap<>();
 	private Map<String, BiometricsDto> biometrics = new HashMap<>();
 	private Map<String, BiometricsException> biometricExceptions = new HashMap<>();
+	private Map<String, BiometricsDto> faceBiometrics = new HashMap<>();
 
 	private List<BiometricsDto> supervisorBiometrics = new ArrayList<>();
 	private List<BiometricsDto> officerBiometrics = new ArrayList<>();
@@ -88,6 +90,7 @@ public class RegistrationDTO {
 		this.AGE_GROUPS.clear();
 		this.biometrics.clear();
 		this.biometricExceptions.clear();
+		this.faceBiometrics.clear();
 		this.BIO_CAPTURES.clear();
 		this.BIO_SCORES.clear();
 		this.ATTEMPTS.clear();
@@ -346,6 +349,11 @@ public class RegistrationDTO {
 								value.getQualityScore() >= savedRegistrationBiometric.getQualityScore())) {
 					addBiometric(fieldId, entry.getKey(), value);
 					//savedBiometrics.add(addBiometric(fieldId, entry.getKey(), value));
+				}
+
+				if(entry.getValue().getBioAttribute().equalsIgnoreCase(Modality.FACE.name())) {
+					String key = String.format("%s_%s", entry.getKey(), value.getNumOfRetries());
+					this.faceBiometrics.put(key, value);
 				}
 			}
 		}
