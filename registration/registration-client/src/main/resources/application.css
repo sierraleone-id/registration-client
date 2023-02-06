@@ -630,15 +630,21 @@
 Working on new Css by taleev
 */
 #loginScreen {
-	-fx-background-image: url('/images/generic-background3.jpg');
-	-fx-background-size: cover, auto;
-	-fx-background-position: left top, center;
+	-fx-background-image: url('/images/CoatofArmsSLN.png');
+	-fx-background-repeat: stretch;
+	-fx-background-size: 600 606;
+	-fx-background-position: center center;
 }
 
 #header-section {
-	-fx-background-color: rgb(11.0, 106.0, 130.0, 0.3);
+	-fx-background-color: rgb(11.0, 106.0, 130.0, 0.9);
 	-fx-pref-height: 30.0px;
 	-fx-pref-width: 1920.0px;
+}
+
+#mosipLogoImageView {
+	-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 10, 0, 0, 0);
+	-fx-background-radius: 5;
 }
 
 #footer-section {

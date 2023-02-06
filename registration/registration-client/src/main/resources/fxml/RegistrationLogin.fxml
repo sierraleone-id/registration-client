@@ -8,11 +8,11 @@
   <bottom>
     <HBox id="footer-section">
       <children>
-        <Label style="-fx-text-fill: white;" text="%mosip.io" />
+        <Label text="%mosip.io" />
         <Label text="  " />
-        <Label style="-fx-text-fill: white;" text="%regClientVersion" />
+        <Label text="%regClientVersion" />
         <Label text=" : " />
-        <Label style="-fx-text-fill: white;" fx:id="versionValueLabel" />
+        <Label fx:id="versionValueLabel" />
       </children>
     </HBox>
   </bottom>
@@ -107,9 +107,9 @@
       <children>
         <AnchorPane prefHeight="27.0" prefWidth="71.0">
           <children>
-            <ImageView fx:id="mosipLogoImageView" fitHeight="34.0" fitWidth="30.0" layoutX="20.0" layoutY="2.0">
+            <ImageView fx:id="mosipLogoImageView" fitHeight="38.0" fitWidth="38.0" layoutX="20.0" layoutY="2.0">
               <image>
-                <Image url="@../images/logo-final.png" />
+                <Image url="@../images/NCRA_Logo.png" />
               </image>
             </ImageView>
           </children>
