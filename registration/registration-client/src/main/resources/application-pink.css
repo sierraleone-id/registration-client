@@ -625,9 +625,10 @@
 Working on new Css by taleev
 */
 #loginScreen {
-	-fx-background-image: url('/images/CoatofArmsSLN.png');
-	-fx-background-size: cover, auto;
-	-fx-background-position: left top, center;
+	-fx-background-image: url('/images/Coat_of_arms_of_Sierra_Leone2.png');
+	-fx-background-repeat: stretch;
+	-fx-background-size: 600 606;
+	-fx-background-position: center center;
 }
 
 #header-section {
