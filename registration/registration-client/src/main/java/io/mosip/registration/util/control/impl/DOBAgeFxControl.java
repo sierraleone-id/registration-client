@@ -79,7 +79,6 @@ public class DOBAgeFxControl extends FxControl {
 				.getBundle(langCode, RegistrationConstants.LABELS);
 
 		VBox ageVBox = new VBox();
-		ageVBox.setPrefWidth(390);
 
 		List<String> labels = new ArrayList<>();
 		getRegistrationDTo().getSelectedLanguagesByApplicant().forEach(lCode -> {
@@ -111,7 +110,7 @@ public class DOBAgeFxControl extends FxControl {
 		label.setMinWidth(Region.USE_PREF_SIZE);
 		label.setAlignment(Pos.CENTER);
 		dobHBox.getChildren().add(label);
-		
+
 		/** Add Age Field */
 		dobHBox.getChildren().add(addDateTextField(uiFieldDTO, RegistrationConstants.AGE_FIELD,
 				resourceBundle.getString(RegistrationConstants.AGE_FIELD)));
@@ -122,13 +121,10 @@ public class DOBAgeFxControl extends FxControl {
 //						"YEARS, RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL, true,
 //						ageVBox.getWidth()));
 		ageVBox.getChildren().add(dobHBox);
-		ageVBox.setMargin(dobHBox, new Insets(0, 30, 0, 0));
 
 		/** Validation message (Invalid/wrong,,etc,.) */
 		ageVBox.getChildren().add(getLabel(uiFieldDTO.getId() + RegistrationConstants.ERROR_MSG, null,
 				RegistrationConstants.DemoGraphicFieldMessageLabel, false, ageVBox.getPrefWidth()));
-
-		dobHBox.prefWidthProperty().bind(ageVBox.widthProperty());
 
 		changeNodeOrientation(ageVBox, langCode);
 		return ageVBox;
