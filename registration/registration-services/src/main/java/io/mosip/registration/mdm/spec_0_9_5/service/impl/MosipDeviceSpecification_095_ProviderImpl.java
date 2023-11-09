@@ -189,7 +189,8 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 			}
 
 			//int count = getCount(getDefaultCount(mdmRequestDto.getModality()),
-			int count = getCount(mdmRequestDto.getModality(),(getDefaultCount(mdmRequestDto.getModality()),
+			int count = getCount(mdmRequestDto.getModality(),
+					     getDefaultCount(mdmRequestDto.getModality()),
 					mdmRequestDto.getExceptions() != null ? mdmRequestDto.getExceptions().length : 0);
 			mdmRequestDto.setCount(count);
 
