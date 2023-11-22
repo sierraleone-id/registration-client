@@ -42,6 +42,11 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+/*import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;*/
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
@@ -292,6 +297,7 @@ public class TextFieldFxControl extends FxControl {
 	private HBox createTextBox(String langCode, boolean isSimpleType) {
 		HBox textFieldHBox = new HBox();
 		TextField textField = getTextField(langCode, uiFieldDTO.getId() + langCode, false);
+		//textField.setMinWidth(400);
 		textFieldHBox.setHgrow(textField, Priority.ALWAYS);
 		textFieldHBox.getChildren().add(textField);
 

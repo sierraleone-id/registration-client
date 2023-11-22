@@ -30,6 +30,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import io.mosip.kernel.biometrics.commons.CbeffValidator;
+import io.mosip.kernel.biometrics.constant.BiometricFunction;
+import io.mosip.kernel.biometrics.constant.BiometricType;
+import io.mosip.kernel.biometrics.constant.ProcessedLevelType;
+import io.mosip.kernel.biometrics.entities.BIR;
+import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
+import io.mosip.kernel.core.bioapi.exception.BiometricException;
 import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleType;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -59,6 +66,7 @@ import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.dto.schema.SchemaDto;
 import io.mosip.registration.dto.schema.UiFieldDTO;
+import io.mosip.registration.entity.UserBiometric;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RemapException;
@@ -72,6 +80,7 @@ import io.mosip.registration.service.operator.UserOnboardService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.security.AuthenticationService;
 import io.mosip.registration.service.sync.SyncStatusValidatorService;
+import io.mosip.registration.util.common.BIRBuilder;
 import io.mosip.registration.util.common.PageFlow;
 import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
@@ -194,6 +203,12 @@ public class BaseController {
 	protected BaseService baseService;
 
 	@Autowired
+	protected BIRBuilder birBuilder;
+
+	@Autowired
+	private BioAPIFactory bioAPIFactory;
+
+	@Autowired
 	private AuthTokenUtilService authTokenUtilService;
 
 	@Autowired
@@ -201,7 +216,7 @@ public class BaseController {
 
 	@Autowired
 	private DocumentScanController documentScanController;
-	
+
 	protected ApplicationContext applicationContext = ApplicationContext.getInstance();
 
 	public Text getScanningMsg() {
@@ -608,7 +623,7 @@ public class BaseController {
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE));
 		}
 	}
-	
+
 	/**
 	 * Opens the home page screen.
 	 */
@@ -1051,7 +1066,7 @@ public class BaseController {
 	protected void getCurrentPage(Pane pageId, String notTosShow, String show) {
 		LOGGER.info("Pane : {}, Navigating from current page {} to show : {}",
 				pageId == null ? "null" : pageId.getId(), notTosShow, show);
-		
+
 		if (pageId != null) {
 			if (notTosShow != null) {
 				((Pane) pageId.lookup(RegistrationConstants.HASH + notTosShow)).setVisible(false);
@@ -1060,7 +1075,7 @@ public class BaseController {
 				((Pane) pageId.lookup(RegistrationConstants.HASH + show)).setVisible(true);
 			}
 		}
-		
+
 		LOGGER.info("Navigated to next page >> {}", show);
 	}
 
@@ -1496,7 +1511,7 @@ public class BaseController {
 		}
 		return languages;
 	}
-	
+
 	protected List<GenericDto> getConfiguredLanguagesForLogin() {
 		List<GenericDto> languages = new ArrayList<>();
 		for (String langCode : getConfiguredLangCodes()) {
@@ -1527,8 +1542,8 @@ public class BaseController {
 		}
 		return Collections.EMPTY_LIST;
 	}
-	
-	
+
+
 	public void setImage(ImageView imageView, String imageName) {
 
 		if (imageView != null) {
@@ -1553,13 +1568,13 @@ public class BaseController {
 		}
 
 
-		try {					
+		try {
 
 			return getImage(getImageFilePath(getConfiguredFolder(),imageName));
 		} catch (RegBaseCheckedException exception) {
 
 			if(canDefault) {
-			return getImage(getImageFilePath(RegistrationConstants.IMAGES,imageName));
+				return getImage(getImageFilePath(RegistrationConstants.IMAGES,imageName));
 			} else {
 				throw exception;
 			}
@@ -1569,7 +1584,7 @@ public class BaseController {
 	}
 
 	private Image getImage(String uri) throws RegBaseCheckedException {
-        try {
+		try {
 			return  new Image(getClass().getResourceAsStream(uri));
 		} catch (Exception exception) {
 			LOGGER.error("Exception while Getting Image "+ uri, exception);
@@ -1585,14 +1600,14 @@ public class BaseController {
 		String[] names = imageName.split("\\/|\\\\");
 		return String.format(TEMPLATE, configFolder, String.join("/", names));
 	}
-	
+
 	public String getImagePath(String imageName, boolean canDefault) throws RegBaseCheckedException {
 		if (imageName == null || imageName.isEmpty()) {
 			throw new RegBaseCheckedException();
 		}
 		return getImageFilePath(getConfiguredFolder(),imageName);
 	}
-	
+
 	public void changeNodeOrientation(Node node) {
 		if (node != null && applicationContext.isPrimaryLanguageRightToLeft()) {
 			node.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
@@ -1612,7 +1627,7 @@ public class BaseController {
 		}
 		return wr;
 	}
-	
+
 	/**
 	 * This method will remove the auth method from list
 	 *
@@ -1628,11 +1643,11 @@ public class BaseController {
 		authList.removeIf(auth -> authList.size() > 1 && RegistrationConstants.DISABLE.equalsIgnoreCase(flag)
 				&& auth.equalsIgnoreCase(authCode));
 	}
-	
+
 	protected boolean haveToSaveAuthToken(String userId) {
 		return SessionContext.userId().equals(userId);
 	}
-	
+
 	/**
 	 * to capture and validate the fingerprint for authentication
 	 *
@@ -1654,7 +1669,7 @@ public class BaseController {
 						.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT),
 				1, io.mosip.registration.context.ApplicationContext.getIntValueFromApplicationMap(
 				RegistrationConstants.FINGERPRINT_AUTHENTICATION_THRESHOLD));
-		
+
 		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
 		boolean fpMatchStatus = authenticationService.authValidator(userId, SingleType.FINGER.value(), biometrics);
 		if (fpMatchStatus && isPacketAuth) {
@@ -1712,7 +1727,7 @@ public class BaseController {
 		}
 		return match;
 	}
-	
+
 	private void addOperatorBiometrics(List<BiometricsDto> biometrics, boolean isReviewer) {
 		if (isReviewer) {
 			RegistrationDTO registrationDTO = (RegistrationDTO) SessionContext.getInstance().getMapObject()
@@ -1724,7 +1739,7 @@ public class BaseController {
 			registrationDTO.addOfficerBiometrics(biometrics);
 		}
 	}
-	
+
 	protected void showAlertAndLogout() {
 		/* Generate alert */
 		Alert logoutAlert = createAlert(AlertType.INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SYNC_SUCCESS),RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.ALERT_NOTE_LABEL),
@@ -1732,7 +1747,7 @@ public class BaseController {
 				RegistrationConstants.OK_MSG, null);
 
 		logoutAlert.show();
-		Rectangle2D screenSize = Screen.getPrimary().getVisualBounds();		
+		Rectangle2D screenSize = Screen.getPrimary().getVisualBounds();
 		Double xValue = screenSize.getWidth()/2 - logoutAlert.getWidth() + 250;
 		Double yValue = screenSize.getHeight()/2 - logoutAlert.getHeight();
 		logoutAlert.hide();
@@ -1745,5 +1760,40 @@ public class BaseController {
 		if (result == ButtonType.OK) {
 			headerController.logout();
 		}
+	}
+
+	public boolean matchBiometrics(BiometricType biometricType, List<UserBiometric> userBiometrics, List<BiometricsDto> biometrics) {
+		Map<String, List<BIR>> gallery = new HashMap<>();
+		userBiometrics.forEach(userBiometric -> {
+			String userId = userBiometric.getUserBiometricId().getUsrId();
+
+			try {
+				BIR bir = CbeffValidator.getBIRFromXML(userBiometric.getBioRawImage());
+				gallery.computeIfAbsent(userId, k -> new ArrayList<BIR>())
+						.add(bir.getBirs().get(0));
+			} catch (Exception e) {
+				LOGGER.error("Failed deserialization of BIR data of operator with exception >> ", e);
+				// Since de-serialization failed, we assume that we stored BDB in database and
+				// generating BIR from it
+				gallery.computeIfAbsent(userId, k -> new ArrayList<BIR>())
+						.add(birBuilder.buildBir(userBiometric.getUserBiometricId().getBioAttributeCode(),
+								userBiometric.getQualityScore(), userBiometric.getBioIsoImage(), ProcessedLevelType.PROCESSED));
+			}
+		});
+
+		List<BIR> sample = new ArrayList<>(biometrics.size());
+		biometrics.forEach(biometricDto -> {
+			sample.add(birBuilder.buildBir(biometricDto.getBioAttribute(),
+					(long) biometricDto.getQualityScore(), biometricDto.getAttributeISO(), ProcessedLevelType.RAW));
+		});
+
+		try {
+			Map<String, Boolean> result = bioAPIFactory.getBioProvider(biometricType, BiometricFunction.MATCH)
+					.identify(sample, gallery, biometricType, null);
+			return result.entrySet().stream().anyMatch(e -> e.getValue() == true);
+		} catch (BiometricException e) {
+			LOGGER.error("Failed in dedupe check >> ", e);
+		}
+		return false;
 	}
 }
